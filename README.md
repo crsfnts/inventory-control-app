@@ -57,3 +57,27 @@ This release redesigns Login, Inventory, and Admin into a compact NOHN-style wor
 - Refined forms and tables for tighter spacing, clearer hierarchy, and improved scanability.
 - Admin/User view toggle remains a UI preview mode only and does not change database roles.
 - No PHI should be stored in this system.
+
+## Emergency fix: manufacturer/schema cache error
+
+If you see this error when adding an item:
+
+> Could not find the 'manufacturer' column of 'items' in the schema cache
+
+run this exact repair flow:
+
+1. Open Supabase.
+2. Go to **SQL Editor**.
+3. Open this file from the repo:
+   - `database/repair_items_manufacturer_and_safe_delete.sql`
+4. Paste it into Supabase SQL Editor.
+5. Click **Run**.
+6. Sign out of the app.
+7. Sign back in.
+8. Test adding an item again.
+
+If the error still mentions schema cache, run this in SQL Editor:
+
+```sql
+NOTIFY pgrst, 'reload schema';
+```
