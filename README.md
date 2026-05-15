@@ -105,3 +105,37 @@ If schema cache still appears stale, run:
 ```sql
 NOTIFY pgrst, 'reload schema';
 ```
+
+## Master Restart
+
+### What it does
+- Clears inventory setup and history from these tables:
+  - `items`
+  - `locations`
+  - `par_levels`
+  - `monthly_counts`
+  - `transactions`
+
+### What it does not do
+- Does **not** delete Supabase Auth users (`auth.users`).
+- Does **not** delete `profiles`.
+- Does **not** delete admin/staff roles.
+
+### How to install
+1. Open Supabase → SQL Editor.
+2. Run `database/add_master_restart.sql`.
+
+### How to use
+1. Sign in as an admin.
+2. Go to **Admin → Danger Zone**.
+3. Click **Master Restart**.
+4. Continue through the warning.
+5. Type exactly: `RESET INVENTORY`.
+6. Check **I understand this cannot be undone.**
+7. Click **Permanently Reset Inventory**.
+
+### Warning
+- This action is permanent and cannot be undone.
+
+### No PHI reminder
+- Do not store PHI in this app (no patient names, DOB, MRN, RX numbers, or other identifiers).
