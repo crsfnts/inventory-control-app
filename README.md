@@ -81,3 +81,27 @@ If the error still mentions schema cache, run this in SQL Editor:
 ```sql
 NOTIFY pgrst, 'reload schema';
 ```
+
+## Fix transaction action constraint error
+
+If you see this error while saving **Opening Inventory / Adjustments**:
+
+> new row for relation "transactions" violates check constraint "transactions_action_check"
+
+run this fix:
+
+1. Open Supabase.
+2. Go to **SQL Editor**.
+3. Open this file from the repo:
+   - `database/fix_transactions_action_constraint.sql`
+4. Paste it into Supabase SQL Editor.
+5. Click **Run**.
+6. Sign out of the app.
+7. Sign back in.
+8. Test **Opening Inventory / Adjustments** again.
+
+If schema cache still appears stale, run:
+
+```sql
+NOTIFY pgrst, 'reload schema';
+```
