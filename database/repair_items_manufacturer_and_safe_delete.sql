@@ -124,7 +124,7 @@ grant execute on function public.delete_item_if_unused(uuid) to authenticated;
 grant execute on function public.delete_location_if_unused(uuid) to authenticated;
 
 -- Keep admin-only delete path for par levels.
-create policy if not exists "admins delete par levels" on public.par_levels for delete to authenticated using (public.is_admin());
+
 
 commit;
 
