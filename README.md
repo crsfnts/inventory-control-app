@@ -1,53 +1,25 @@
 # Inventory Control App
 
-React + Vite + Supabase inventory app with append-only transaction history and role-based access control.
+## New updates
+- Added optional `manufacturer` on items/medications.
+- Added safe delete vs archive behavior:
+  - Items/locations can be permanently deleted only when unused (no transactions, monthly counts, or par levels).
+  - If history exists, UI shows archive guidance and uses **Archive** labels.
+  - Transactions are append-only and are never deleted or edited in frontend.
+  - User management uses **Deactivate User / Reactivate User** only.
+- Navigation simplified to `Dashboard`, `Inventory`, `Admin`, `Reports`.
+- Dashboard rebuilt with KPI cards and below-par watchlist.
 
-## Fix current admin/profile issue
+## Supabase SQL migration
+Run:
+- `database/add_manufacturer_and_safe_delete.sql`
 
-1. Open Supabase **SQL Editor**.
-2. Run `database/setup.sql` (if your base schema is not installed yet).
-3. Run `database/fix_admin_profiles_and_roles.sql`.
-4. Sign out of the app and sign back in.
-5. Confirm the sidebar shows **Admin view**.
+This migration adds manufacturer, performance indexes, and safe-delete RPCs:
+- `delete_item_if_unused(item_id uuid)`
+- `delete_location_if_unused(location_id uuid)`
 
-## Seeded admin emails
+## Auth deletion note
+True Supabase Auth user deletion is **not** done from frontend. Use Supabase Dashboard or a secure backend function with service role credentials.
 
-If these users exist in `auth.users`, they are forced to `admin` in `public.profiles`:
-
-- `cfuentes@nohn-pa.org`
-- `crsfnts@gmail.com`
-
-All other users default to `staff`.
-
-## Permissions summary
-
-### Admin permissions
-- Manage users in-app via `profiles` (role changes, deactivate/reactivate).
-- Manage items (add/edit/deactivate).
-- Manage locations (add/edit/deactivate).
-- Manage par/target levels.
-- Create opening balance and admin adjustment transactions.
-- All staff permissions.
-
-### Staff permissions
-- Add stock, remove stock, transfer stock.
-- Complete monthly counts.
-- View dashboard/history and export data.
-
-Staff cannot manage users/items/locations/par levels, cannot make opening/admin adjustments, and cannot delete/update transactions.
-
-## User deletion note
-
-This app uses frontend `anon` credentials only (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`).
-
-Because of that, true Supabase Auth user deletion is **not** done in frontend code. In-app user lifecycle is deactivate/reactivate via `profiles.active`. True auth-user deletion must be done in Supabase Dashboard or a secure server-side function using service role credentials.
-
-## Security and compliance
-
-- Do **not** expose service-role keys in frontend or Netlify env vars.
-- Keep using only:
-  - `VITE_SUPABASE_URL`
-  - `VITE_SUPABASE_ANON_KEY`
-- Do **not** store PHI (no patient name, DOB, MRN, RX number, address, etc.).
-- Keep transactions append-only.
-- Keep balances derived from transaction history.
+## Compliance
+Do not store PHI in this app.
