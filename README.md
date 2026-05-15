@@ -67,3 +67,23 @@ This migration adds manufacturer, performance indexes, and safe-delete RPCs:
 
 ## Auth deletion note
 True Supabase Auth user deletion is **not** done from frontend. Use Supabase Dashboard or a secure backend function with service role credentials.
+
+## Auth behavior
+- Signed-out users are shown a branded login screen (no raw text fallback).
+- Sign out clears app state and returns users to the login screen.
+- Auth state changes (sign in/sign out/session changes) are handled in one listener flow.
+
+## Refresh behavior
+- Topbar **Refresh** now triggers a real Supabase reload for app data.
+- Refresh button is disabled while loading and shows a spinner animation.
+- Dashboard, Inventory, Admin, and Reports data all update from the same refresh path.
+
+## UI polish updates
+- Added subtle hover lift for primary/ghost buttons.
+- Added sidebar nav hover motion and KPI/action card hover feedback.
+- Added loading/spin animation for refresh and save actions.
+- Added polished branded login screen styling.
+
+## Netlify compatibility
+- Build/deploy workflow remains Vite + Netlify compatible.
+- No service-role keys are added to frontend code.
