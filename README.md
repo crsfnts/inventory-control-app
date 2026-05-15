@@ -51,3 +51,9 @@ This release redesigns Login, Inventory, and Admin into a compact NOHN-style wor
 - Item/location archive and safe-delete behavior via RPC.
 - Par level create/update and reporting history views.
 - Netlify-compatible Vite build output.
+
+## UI Polish Update (May 2026)
+- Completed a professional UI polish pass with a compact, reusable button system.
+- Refined forms and tables for tighter spacing, clearer hierarchy, and improved scanability.
+- Admin/User view toggle remains a UI preview mode only and does not change database roles.
+- No PHI should be stored in this system.
