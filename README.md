@@ -1,92 +1,93 @@
 # Inventory Control App
 
-A React + Vite + Supabase + Netlify starter app for guided inventory tracking.
+React + Vite + Supabase + Netlify inventory application with audit-safe transactions and role-based access control (RBAC).
 
-## What this app does
+## RBAC overview
 
-- Login/signup with Supabase Auth
-- Add stock
-- Remove stock with negative-balance prevention
-- Transfer stock between locations
-- Monthly physical count with automatic adjustment transaction
-- Set par and target levels
-- Dashboard for below-par/reorder alerts
-- Protected transaction history with CSV export
+The app now has two roles stored in `public.profiles.role`:
 
-## Important safety note
+- **admin**
+  - Can create/edit/deactivate items.
+  - Can create/edit/deactivate locations.
+  - Can create/edit par and target levels.
+  - Can perform opening balance and correction actions only by writing transactions (`OPENING_BALANCE`, `ADMIN_ADJUSTMENT`).
+  - Can do all staff workflows.
+- **staff**
+  - Can view active items/locations.
+  - Can use Add, Remove, Transfer, Monthly Count, Dashboard, History, and Export.
+  - Cannot edit setup tables or directly edit balances.
+  - Cannot delete transactions.
 
-This app is designed for inventory only. Do not enter PHI:
+The frontend hides admin setup UI for staff and shows **Admin view** / **Staff view** labels. Supabase RLS also enforces these permissions server-side.
 
-- No patient names
-- No DOBs
-- No MRNs
-- No prescription numbers
-- No addresses
-- No patient identifiers in notes
+## Important safety note (No PHI)
 
-## Supabase setup
+This app is for inventory workflows only. **Do not store PHI** (patient names, DOB, MRN, Rx numbers, addresses, or any patient identifiers).
 
-1. Go to your Supabase project.
-2. Open **SQL Editor**.
-3. Create a new query.
-4. Paste the contents of `database/setup.sql`.
-5. Click **Run**.
+## Supabase SQL steps (manual)
 
-The setup script creates:
+Run both scripts in Supabase SQL Editor:
 
-- `items`
-- `locations`
-- `par_levels`
-- `transactions`
-- `monthly_counts`
+1. `database/setup.sql` (base schema)
+2. `database/add_roles_and_admin_policies.sql` (RBAC migration)
 
-It also enables Row Level Security and creates starter policies for logged-in users.
+### How to run
+
+1. Open Supabase project → **SQL Editor**.
+2. Paste and run `database/setup.sql` if this is a fresh install.
+3. Paste and run `database/add_roles_and_admin_policies.sql`.
+4. Verify `public.profiles` contains your users and role assignments.
+
+## Make `cfuentes@nohn-pa.org` admin
+
+The migration does this in two ways:
+
+- Backfills existing `auth.users` into `public.profiles` and sets `cfuentes@nohn-pa.org` to role `admin`.
+- Adds a trigger so future signups auto-create a profile; this specific email is assigned `admin`.
+
+If needed, you can manually enforce it with:
+
+```sql
+update public.profiles
+set role = 'admin'
+where lower(email) = 'cfuentes@nohn-pa.org';
+```
+
+## Data integrity rules
+
+- No direct balance field is edited.
+- Balances are calculated from transactions.
+- Opening inventory uses `OPENING_BALANCE` transaction.
+- Admin corrections use `ADMIN_ADJUSTMENT` transaction with required reason.
+- Transfers remain two transactions (`TRANSFER_OUT` + `TRANSFER_IN`).
+- Remove/Transfer prevent negative balance in app workflow.
+- Transaction deletes are blocked from client by RLS (no delete policy).
+
+## Environment variables
+
+Keep these variables unchanged:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
 
 ## Local setup
 
 ```bash
 npm install
-cp .env.example .env.local
 npm run dev
 ```
 
-Your `.env.local` should contain:
+Example `.env.local`:
 
 ```env
-VITE_SUPABASE_URL=https://unobwuopiwpxyhmhfpls.supabase.co
-VITE_SUPABASE_ANON_KEY=your_publishable_or_anon_key
+VITE_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+VITE_SUPABASE_ANON_KEY=YOUR_ANON_KEY
 ```
 
-## Netlify setup
+## Netlify
 
-1. Push this folder to GitHub.
-2. Create a new Netlify site from that GitHub repo.
-3. Build command: `npm run build`
-4. Publish directory: `dist`
-5. Add environment variables in Netlify:
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
-6. Deploy.
-
-## First test workflow
-
-1. Sign up or sign in.
-2. Go to **Setup / Par**.
-3. Add any missing items and locations.
-4. Set par and target levels.
-5. Use **Add Stock** to create opening balances.
-6. Test **Remove Stock**.
-7. Test **Transfer**.
-8. Test **Monthly Count**.
-9. Check the dashboard.
-
-## Production hardening ideas
-
-The included RLS policies are intentionally beginner-friendly. Later, make them stricter:
-
-- Add roles: admin, staff, manager
-- Only admins can edit setup tables
-- Staff can insert transactions but not edit items/par levels
-- Managers can view dashboards/history
-- Add organization/team ID if multiple departments use the app
-- Add Netlify password protection or identity rules if needed
+- Build command: `npm run build`
+- Publish directory: `dist`
+- Add env vars:
+  - `VITE_SUPABASE_URL`
+  - `VITE_SUPABASE_ANON_KEY`
