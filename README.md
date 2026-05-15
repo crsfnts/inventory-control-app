@@ -1,93 +1,53 @@
 # Inventory Control App
 
-React + Vite + Supabase + Netlify inventory application with audit-safe transactions and role-based access control (RBAC).
+React + Vite + Supabase inventory app with append-only transaction history and role-based access control.
 
-## RBAC overview
+## Fix current admin/profile issue
 
-The app now has two roles stored in `public.profiles.role`:
+1. Open Supabase **SQL Editor**.
+2. Run `database/setup.sql` (if your base schema is not installed yet).
+3. Run `database/fix_admin_profiles_and_roles.sql`.
+4. Sign out of the app and sign back in.
+5. Confirm the sidebar shows **Admin view**.
 
-- **admin**
-  - Can create/edit/deactivate items.
-  - Can create/edit/deactivate locations.
-  - Can create/edit par and target levels.
-  - Can perform opening balance and correction actions only by writing transactions (`OPENING_BALANCE`, `ADMIN_ADJUSTMENT`).
-  - Can do all staff workflows.
-- **staff**
-  - Can view active items/locations.
-  - Can use Add, Remove, Transfer, Monthly Count, Dashboard, History, and Export.
-  - Cannot edit setup tables or directly edit balances.
-  - Cannot delete transactions.
+## Seeded admin emails
 
-The frontend hides admin setup UI for staff and shows **Admin view** / **Staff view** labels. Supabase RLS also enforces these permissions server-side.
+If these users exist in `auth.users`, they are forced to `admin` in `public.profiles`:
 
-## Important safety note (No PHI)
+- `cfuentes@nohn-pa.org`
+- `crsfnts@gmail.com`
 
-This app is for inventory workflows only. **Do not store PHI** (patient names, DOB, MRN, Rx numbers, addresses, or any patient identifiers).
+All other users default to `staff`.
 
-## Supabase SQL steps (manual)
+## Permissions summary
 
-Run both scripts in Supabase SQL Editor:
+### Admin permissions
+- Manage users in-app via `profiles` (role changes, deactivate/reactivate).
+- Manage items (add/edit/deactivate).
+- Manage locations (add/edit/deactivate).
+- Manage par/target levels.
+- Create opening balance and admin adjustment transactions.
+- All staff permissions.
 
-1. `database/setup.sql` (base schema)
-2. `database/add_roles_and_admin_policies.sql` (RBAC migration)
+### Staff permissions
+- Add stock, remove stock, transfer stock.
+- Complete monthly counts.
+- View dashboard/history and export data.
 
-### How to run
+Staff cannot manage users/items/locations/par levels, cannot make opening/admin adjustments, and cannot delete/update transactions.
 
-1. Open Supabase project → **SQL Editor**.
-2. Paste and run `database/setup.sql` if this is a fresh install.
-3. Paste and run `database/add_roles_and_admin_policies.sql`.
-4. Verify `public.profiles` contains your users and role assignments.
+## User deletion note
 
-## Make `cfuentes@nohn-pa.org` admin
+This app uses frontend `anon` credentials only (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`).
 
-The migration does this in two ways:
+Because of that, true Supabase Auth user deletion is **not** done in frontend code. In-app user lifecycle is deactivate/reactivate via `profiles.active`. True auth-user deletion must be done in Supabase Dashboard or a secure server-side function using service role credentials.
 
-- Backfills existing `auth.users` into `public.profiles` and sets `cfuentes@nohn-pa.org` to role `admin`.
-- Adds a trigger so future signups auto-create a profile; this specific email is assigned `admin`.
+## Security and compliance
 
-If needed, you can manually enforce it with:
-
-```sql
-update public.profiles
-set role = 'admin'
-where lower(email) = 'cfuentes@nohn-pa.org';
-```
-
-## Data integrity rules
-
-- No direct balance field is edited.
-- Balances are calculated from transactions.
-- Opening inventory uses `OPENING_BALANCE` transaction.
-- Admin corrections use `ADMIN_ADJUSTMENT` transaction with required reason.
-- Transfers remain two transactions (`TRANSFER_OUT` + `TRANSFER_IN`).
-- Remove/Transfer prevent negative balance in app workflow.
-- Transaction deletes are blocked from client by RLS (no delete policy).
-
-## Environment variables
-
-Keep these variables unchanged:
-
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY`
-
-## Local setup
-
-```bash
-npm install
-npm run dev
-```
-
-Example `.env.local`:
-
-```env
-VITE_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
-VITE_SUPABASE_ANON_KEY=YOUR_ANON_KEY
-```
-
-## Netlify
-
-- Build command: `npm run build`
-- Publish directory: `dist`
-- Add env vars:
+- Do **not** expose service-role keys in frontend or Netlify env vars.
+- Keep using only:
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
+- Do **not** store PHI (no patient name, DOB, MRN, RX number, address, etc.).
+- Keep transactions append-only.
+- Keep balances derived from transaction history.
