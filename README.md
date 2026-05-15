@@ -1,89 +1,53 @@
 # Inventory Control App
 
-## Phase 1 UI Redesign (React + Vite + Supabase + Netlify)
+## UI Update Summary (React + Vite + Supabase + Netlify)
 
-This release introduces a NOHN-inspired healthcare-professional app shell while keeping existing inventory logic and Supabase role behavior intact.
+This release redesigns Login, Inventory, and Admin into a compact NOHN-style workspace while preserving Supabase Auth, role protections, RLS assumptions, and transaction-based inventory balance logic.
 
-### Navigation structure
-- Sidebar now uses grouped primary navigation:
-  - Dashboard
-  - Inventory
-  - Admin
-  - Reports
-- Inventory opens a cleaner Inventory Actions workspace for:
+## Login behavior
+- Sign In remains the primary full-width CTA.
+- Sign Up / Sign In toggle is now a matching full-width secondary button.
+- Both auth buttons share height, radius, and hover animation.
+- Auth remains centered and photo-free.
+
+## Admin View / User View preview mode
+- Admin users now get a sidebar segmented toggle:
+  - User view
+  - Admin view
+- Default is **Admin view**.
+- **User view** hides Admin navigation/tools for UI preview only.
+- This does not change database role, Supabase permissions, or RLS behavior.
+- Staff users do not see the toggle; they only see a Staff view badge.
+
+## Inventory workspace
+- Inventory now uses action tabs:
   - Add Stock
   - Remove Stock
   - Transfer
   - Monthly Count
-- Admin opens an Admin workspace for:
+- Only one workflow form is visible at a time (reduced page length).
+- A Recent Inventory Activity table appears below with search and action badges.
+
+## Admin workspace
+- Admin now uses tool tabs:
   - Users
   - Items / Medications
   - Locations
   - Par Levels
   - Opening Inventory / Adjustments
-- Reports includes history/export-oriented workflow.
+- Only one admin tool is visible at a time.
+- Each tool follows a compact form-on-top + table-below structure.
 
-### Role-based visibility
-- Admin users see: Dashboard, Inventory, Admin, Reports.
-- Staff users see: Dashboard, Inventory, Reports.
-- Staff users do **not** see Admin navigation/tools.
-- Sidebar includes visible role indicator:
-  - `Admin view`
-  - `Staff view`
-
-### Theme and branding
-- NOHN-inspired palette and styling:
-  - Deep navy sidebar
-  - Teal/aqua accents
-  - White cards
-  - Soft blue-gray background
-  - Rounded corners and subtle shadows
-- Existing Inventory Control branding is retained and visually polished.
-
-### User identity visuals
-- User profile photos are intentionally **not used**.
-- Header uses email and initials badge only.
-
-### Compliance and data safety
+## Compliance and data safety
 - Do not store PHI in this app.
-- No patient names, DOB, MRN, RX numbers, or addresses.
+- Never add patient name, DOB, MRN, RX number, address, or other patient-identifying fields.
 - Transactions remain append-only and balances remain transaction-derived.
+- No service-role keys are exposed in frontend code.
 
-## Existing updates retained
-- Added optional `manufacturer` on items/medications.
-- Added safe delete vs archive behavior:
-  - Items/locations can be permanently deleted only when unused (no transactions, monthly counts, or par levels).
-  - If history exists, UI shows archive guidance and uses **Archive** labels.
-  - Transactions are append-only and are never deleted or edited in frontend.
-  - User management uses **Deactivate User / Reactivate User** only.
-
-## Supabase SQL migration
-Run:
-- `database/add_manufacturer_and_safe_delete.sql`
-
-This migration adds manufacturer, performance indexes, and safe-delete RPCs:
-- `delete_item_if_unused(item_id uuid)`
-- `delete_location_if_unused(location_id uuid)`
-
-## Auth deletion note
-True Supabase Auth user deletion is **not** done from frontend. Use Supabase Dashboard or a secure backend function with service role credentials.
-
-## Auth behavior
-- Signed-out users are shown a branded login screen (no raw text fallback).
-- Sign out clears app state and returns users to the login screen.
-- Auth state changes (sign in/sign out/session changes) are handled in one listener flow.
-
-## Refresh behavior
-- Topbar **Refresh** now triggers a real Supabase reload for app data.
-- Refresh button is disabled while loading and shows a spinner animation.
-- Dashboard, Inventory, Admin, and Reports data all update from the same refresh path.
-
-## UI polish updates
-- Added subtle hover lift for primary/ghost buttons.
-- Added sidebar nav hover motion and KPI/action card hover feedback.
-- Added loading/spin animation for refresh and save actions.
-- Added polished branded login screen styling.
-
-## Netlify compatibility
-- Build/deploy workflow remains Vite + Netlify compatible.
-- No service-role keys are added to frontend code.
+## Existing logic preserved
+- Supabase sign in/sign up/sign out flow.
+- Role-based access for admin/staff.
+- Inventory actions: add, remove, transfer, monthly count.
+- Item/location archive and safe-delete behavior via RPC.
+- Par level create/update and reporting history views.
+- Netlify-compatible Vite build output.
